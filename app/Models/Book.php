@@ -2,31 +2,39 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Database\Factories\UserFactory;
-use Illuminate\Database\Eloquent\Attributes\Fillable;
-use Illuminate\Database\Eloquent\Attributes\Hidden;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Model;
+use App\Models\Review;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['name', 'email', 'password'])]
-#[Hidden(['password', 'remember_token'])]
-class User extends Authenticatable
+class Book extends Model
 {
-    /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    protected $fillable = [
+        'title',
+        'author',
+        'isbn',
+        'publishedYear',
+        'available',
+    ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
-    protected function casts(): array
+    public function reviews(): HasMany
     {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
+        return $this->hasMany(Review::class);
     }
+    public function getReviewCountAttribute(): int
+    {
+        if ($this->relationLoaded('reviews')) {
+            return $this->reviews->count();
+        }
+        return $this->reviews()->count();
+    }
+    public function getAverageRatingAttribute(): ?float
+    {
+        $averageRating = $this->relationLoaded('reviews') 
+        ? $this->reviews->avg('rating') 
+        : $this->reviews()->avg('rating');
+        return $averageRating !== null 
+        ? round((float) $averageRating, 2) 
+        : null;
+    }
+
 }
