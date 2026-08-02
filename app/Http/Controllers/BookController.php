@@ -3,12 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\DTO\SearchBookDTO;
-use App\Providers\Requests\SearchBookRequest;
-use App\Providers\Requests\BasicBookRequest;
+use App\Http\Requests\SearchBookRequest;
+use App\Http\Requests\BasicBookRequest;
 use App\Services\BookService;
 use Illuminate\Http\JsonResponse;
 
-class Bookcontroller
+class BookController
 {
     public function __construct(private readonly BookService $bookService)
     {
