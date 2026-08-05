@@ -58,43 +58,39 @@ Class BookRepository
         ];
     }
 
-    public function search(SearchBookDTO $dto): Collection
-    {
-        $sortBy = $dto->getSortBy()?? 'title';
-        $order = $dto->getOrder() ?? 'asc';
-        $allowedSorts = ['title', 'author', 'publishedYear', 'averageRating'];
-
-        $query = Book::query()
-        ->withCount('reviews as reviewCount' )
-        ->with('reviews as averageRating', 'rating')
-
-        ->when (!empty($dto->getTitle()),
-            function ($query) use ($dto) {
-                $query->where('title', 'like', '%' . $dto->getTitle() . '%');
+   public function search(SearchBookDto $dto): Collection
+{
+    $query = Book::query()
+        ->with('reviews')
+        ->when(
+            $dto->getTitle(),
+            function ($query, $title) {
+                $query->where('title', 'like', '%' . $title . '%');
             }
         )
-        ->when (!empty($dto->getAuthor()),
-            function ($query) use ($dto) {
-                $query->where('author', 'like', '%' . $dto->getAuthor() . '%');
+        ->when(
+            $dto->getAuthor(),
+            function ($query, $author) {
+                $query->where('author', 'like', '%' . $author . '%');
             }
         )
-         ->when ($dto->getMinRating() !== null,
+        ->when(
+            $dto->getMinRating() !== null,
             function ($query) use ($dto) {
-                $query->having('averageRating', '>=', $dto->getMinRating());
+                $query->whereHas(
+                    'reviews',
+                    function ($reviewQuery) use ($dto) {
+                        $reviewQuery->where(
+                            'rating',
+                            '>=',
+                            $dto->getMinRating()
+                        );
+                    }
+                );
             }
-        );
-
-        if (!in_array($sortBy, $allowedSorts, true)) {
-            $sortBy = 'title';
-        }
-
-        if (!in_array($order, ['asc', 'desc'], true)) {
-            $order = 'asc';
-        }
-
-        $query->orderBy($sortBy, $order);
-
-        return $query->get();
-        
-    }
+        )
+        ->orderBy($dto->getSortBy(), $dto->getOrder());
+ 
+    return $query->get();
+}
 }

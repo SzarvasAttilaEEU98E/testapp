@@ -11,17 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('reviews', function (Blueprint $table) {
+        Schema::create('reviews', static function (Blueprint $table) {
             $table->id();
+            $table->foreignId('book_id')->constrained('books')->onDelete('cascade');
+            $table->string('reviewer');
+            $table->integer('rating');
+            $table->text('comment')->nullable();
             $table->timestamps();
         });
-    }
-
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
-    {
-        Schema::dropIfExists('reviews');
     }
 };

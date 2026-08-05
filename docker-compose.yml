@@ -1,0 +1,39 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: testapp_app
+    working_dir: /app
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+      - vendor:/app/vendor 
+    depends_on:
+      - db
+    networks:
+      - laravel
+
+  db:
+    image: postgres:latest
+    container_name: testapp_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: testapp
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: secret
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - laravel
+
+volumes:
+  vendor:
+  postgres_data:
+
+networks:
+  laravel:
+    driver: bridge
